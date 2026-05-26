@@ -52,12 +52,29 @@
   .controls button:hover{border-color:var(--ib-cyan-dim)}
   .controls button.active{background:var(--ib-cyan);border-color:var(--ib-cyan);color:#001119;font-weight:600}
   #list{display:flex;flex-direction:column;gap:5px;padding-bottom:8px}
-  .item{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;transition:all 0.12s}
-  .item:hover,.item.active{background:#23275f;border-color:var(--ib-cyan-dim)}
   .item .swatch{width:9px;height:9px;border-radius:50%}
   .item .addr{font-size:12.5px}
   .item .sf{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
   .swatch.small{background:var(--small)}.swatch.medium{background:var(--medium)}.swatch.large{background:var(--large)}
+  /* Project progress panel */
+  .progress-panel{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
+  .progress-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .progress-head .title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .progress-head .overall{font-size:14px;color:var(--ib-cyan);font-weight:700;font-variant-numeric:tabular-nums}
+  .stage-row{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px;margin:5px 0;font-size:11px}
+  .stage-row .badge{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;color:#001119}
+  .stage-row .name{color:var(--text)}
+  .stage-row .count{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px}
+  .stage-row .bar{grid-column:1/-1;height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-top:1px}
+  .stage-row .bar .fill{height:100%;border-radius:3px;transition:width 0.25s}
+  /* Building list with stage pills */
+  .item{display:flex;flex-direction:column;gap:6px;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;transition:all 0.12s}
+  .item:hover,.item.active{background:#23275f;border-color:var(--ib-cyan-dim)}
+  .item-row{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center}
+  .pills{display:flex;gap:4px}
+  .pill{flex:1;text-align:center;font-size:9.5px;font-weight:700;padding:3px 0;border-radius:3px;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);cursor:pointer;transition:all 0.1s;letter-spacing:.5px}
+  .pill:hover{border-color:var(--ib-cyan-dim)}
+  .pill.done{color:#001119;border-color:transparent}
   .footer{padding:10px 16px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);line-height:1.5}
   .footer .ib{color:var(--ib-cyan);font-weight:600;letter-spacing:0.3px}
   #map{width:100%;height:100%}
@@ -76,6 +93,10 @@
   .leaflet-popup-content tr.hl td.v{color:var(--ib-cyan);font-weight:600;font-size:13px}
   .leaflet-control-attribution{background:rgba(10,11,30,.72)!important;color:#aaa!important;font-size:10px!important}
   .leaflet-control-attribution a{color:#ccc!important}
+  /* Rotation control buttons (sit next to zoom) */
+  .rot-btn{display:flex!important;align-items:center;justify-content:center;font-size:14px;font-weight:600;line-height:1;color:#11133b;background:#fff;text-decoration:none}
+  .rot-btn:hover{background:#f4f4f4}
+  .rot-btn .bn{font-size:8.5px;margin-left:1px;color:var(--ib-cyan-dim);font-weight:700}
 </style>
 </head>
 <body>
@@ -105,6 +126,13 @@
         <span><span class="dot" style="background:var(--medium)"></span>5.5–9k</span>
         <span><span class="dot" style="background:var(--large)"></span>&gt; 9,000 sf</span>
       </div>
+      <div class="progress-panel">
+        <div class="progress-head">
+          <span class="title">Project Progress</span>
+          <span class="overall" id="overall-progress">0%</span>
+        </div>
+        <div id="stage-progress"></div>
+      </div>
       <div class="controls">
         <button data-filter="all" class="active">All</button>
         <button data-filter="small">Small</button>
@@ -119,12 +147,12 @@
         <button id="toggle-streets" class="active">Streets</button>
         <button id="toggle-base">Satellite</button>
       </div>
-      <div class="controls">
-        <button id="rot-left" title="Rotate left 15°">↶ Rotate</button>
-        <button id="rot-north" title="Face north">N <span id="bearing-val" style="font-variant-numeric:tabular-nums">0°</span></button>
-        <button id="rot-right" title="Rotate right 15°">Rotate ↷</button>
+      <div class="controls" style="margin-top:8px">
+        <button id="export-progress" title="Download progress JSON">Export progress</button>
+        <button id="import-progress" title="Upload progress JSON">Import</button>
       </div>
       <div id="list"></div>
+      <input type="file" id="progress-file" accept="application/json" style="display:none" />
     </div>
     <div class="footer">
       <span class="ib">INSULATION BUILDERS</span> · Imagery © Esri
@@ -147,6 +175,30 @@ document.getElementById('s-flat').textContent  = fmt(STATS.flat_sf) + ' sf';
 document.getElementById('s-eaves').textContent = fmt(eavesTotal) + ' lf';
 document.getElementById('s-bags').textContent  = fmt(STATS.bags);
 document.getElementById('s-baffles').textContent = fmt(STATS.baffles);
+
+// Stage tracker
+const STAGES = [
+  { key:'baffles',    short:'B', label:'Install Baffles',  color:'#2e9e5b' },
+  { key:'fireStop',   short:'F', label:'Fire Stop',        color:'#d8a82a' },
+  { key:'hatch',      short:'H', label:'Build Hatch',      color:'#62a9ff' },
+  { key:'insulation', short:'I', label:'Blow In Insulation', color:'#e35a3a' },
+];
+const PROGRESS_KEY = 'windsor-oaks-progress-v1';
+let progress = {};
+try { progress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}'); } catch(e) { progress = {}; }
+function saveProgress(){ localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); }
+function stageDone(b, key){ return !!(progress[b.id] && progress[b.id][key]); }
+function setStage(b, key, done){
+  if (!progress[b.id]) progress[b.id] = {};
+  progress[b.id][key] = done;
+  if (!done) delete progress[b.id][key];
+  if (Object.keys(progress[b.id]).length === 0) delete progress[b.id];
+  saveProgress();
+}
+function buildingPct(b){
+  const n = STAGES.filter(s => stageDone(b, s.key)).length;
+  return n / STAGES.length;
+}
 
 const colorFor = b => b.bucket === 'small' ? '#2e9e5b' : b.bucket === 'medium' ? '#d8a82a' : '#e35a3a';
 const radiusFor = b => 6 + Math.sqrt(b.flat_sf) / 18;
@@ -254,15 +306,61 @@ function renderList(){
     const el = document.createElement('div');
     el.className = 'item' + (activeId===b.id ? ' active' : '');
     el.dataset.id = b.id;
-    el.innerHTML = `<span class="swatch ${b.bucket}"></span><span class="addr">${b.short}</span><span class="sf">${fmt(b.flat_sf)} sf</span>`;
-    el.addEventListener('click', () => {
+    const pills = STAGES.map(s => {
+      const done = stageDone(b, s.key);
+      return `<span class="pill ${done?'done':''}" data-stage="${s.key}" title="${s.label}"
+              style="${done? `background:${s.color};border-color:${s.color}` : ''}">${s.short}</span>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="item-row">
+        <span class="swatch ${b.bucket}"></span>
+        <span class="addr">${b.short}</span>
+        <span class="sf">${fmt(b.flat_sf)} sf</span>
+      </div>
+      <div class="pills" data-id="${b.id}">${pills}</div>
+    `;
+    // Row click → fly to building
+    el.querySelector('.item-row').addEventListener('click', () => {
       map.flyTo([b.lat, b.lng], 19, { duration: 0.5 });
       const f = featureByIdx.get(b.id);
       if (f) f.openPopup();
       highlightListItem(b.id);
     });
+    // Pill clicks → toggle stage (don't fly to building)
+    el.querySelectorAll('.pill').forEach(pillEl => {
+      pillEl.addEventListener('click', ev => {
+        ev.stopPropagation();
+        const key = pillEl.dataset.stage;
+        setStage(b, key, !stageDone(b, key));
+        renderProgress();
+        renderList();  // re-render to update pills (preserves filter)
+      });
+    });
     list.appendChild(el);
   }
+}
+
+function renderProgress(){
+  const container = document.getElementById('stage-progress');
+  if (!container) return;
+  container.innerHTML = '';
+  let totalDone = 0;
+  STAGES.forEach(s => {
+    const done = BUILDINGS.filter(b => stageDone(b, s.key)).length;
+    totalDone += done;
+    const pct = Math.round(100 * done / BUILDINGS.length);
+    const row = document.createElement('div');
+    row.className = 'stage-row';
+    row.innerHTML = `
+      <span class="badge" style="background:${s.color}">${s.short}</span>
+      <span class="name">${s.label}</span>
+      <span class="count">${done}/${BUILDINGS.length} · ${pct}%</span>
+      <div class="bar"><div class="fill" style="width:${pct}%;background:${s.color}"></div></div>
+    `;
+    container.appendChild(row);
+  });
+  const overall = Math.round(100 * totalDone / (BUILDINGS.length * STAGES.length));
+  document.getElementById('overall-progress').textContent = overall + '%';
 }
 function highlightListItem(id){
   activeId = id;
@@ -298,21 +396,57 @@ document.getElementById('toggle-base').addEventListener('click', e => {
   }
 });
 
-// Rotation controls
-function setBearing(deg){
-  deg = ((deg % 360) + 360) % 360;
-  map.setBearing(deg);
-  document.getElementById('bearing-val').textContent = Math.round(deg) + '°';
-}
-document.getElementById('rot-left').addEventListener('click', () =>
-  setBearing(map.getBearing() - 15));
-document.getElementById('rot-right').addEventListener('click', () =>
-  setBearing(map.getBearing() + 15));
-document.getElementById('rot-north').addEventListener('click', () => setBearing(0));
+// Rotation control next to zoom +/- (5° per tap)
+const RotateControl = L.Control.extend({
+  options: { position: 'topleft' },
+  onAdd: function(map){
+    const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    function btn(label, title, handler){
+      const a = L.DomUtil.create('a', 'rot-btn', div);
+      a.href = '#'; a.title = title; a.innerHTML = label;
+      L.DomEvent.on(a, 'click', e => { L.DomEvent.stop(e); handler(); });
+      L.DomEvent.disableClickPropagation(a);
+      return a;
+    }
+    btn('↶', 'Rotate left 5°', () => map.setBearing(map.getBearing() - 5));
+    const nBtn = btn('N', 'Reset to north', () => map.setBearing(0));
+    nBtn.id = 'rot-north-btn';
+    btn('↷', 'Rotate right 5°', () => map.setBearing(map.getBearing() + 5));
+    return div;
+  }
+});
+map.addControl(new RotateControl());
 map.on('rotate', () => {
-  document.getElementById('bearing-val').textContent = Math.round(((map.getBearing()%360)+360)%360) + '°';
+  const b = Math.round(((map.getBearing()%360)+360)%360);
+  const el = document.getElementById('rot-north-btn');
+  if (el) el.innerHTML = b ? `N<span class="bn">${b}°</span>` : 'N';
 });
 
+// Export / Import progress JSON
+document.getElementById('export-progress').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(progress, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'windsor-oaks-progress.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('import-progress').addEventListener('click', () =>
+  document.getElementById('progress-file').click());
+document.getElementById('progress-file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      progress = JSON.parse(ev.target.result);
+      saveProgress();
+      renderProgress(); renderList();
+    } catch(err) { alert('Bad JSON: ' + err.message); }
+  };
+  reader.readAsText(file);
+});
+
+renderProgress();
 applyFilter('all');
 map.fitBounds(L.latLngBounds(BUILDINGS.map(b => [b.lat, b.lng])).pad(0.15));
 </script>
