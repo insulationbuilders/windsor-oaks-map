@@ -97,7 +97,7 @@
         </div>
         <div class="stat"><div class="label">Buildings</div><div class="value" id="s-count">—</div></div>
         <div class="stat"><div class="label">Eaves</div><div class="value" id="s-eaves">—</div></div>
-        <div class="stat" style="grid-column:1/-1"><div class="label">Pitched roof (Oded)</div><div class="value" id="s-pitch">—</div></div>
+        <div class="stat" style="grid-column:1/-1"><div class="label">Pitched roof</div><div class="value" id="s-pitch">—</div></div>
       </div>
       <div class="legend">
         <span><span class="dot" style="background:var(--small)"></span>&lt; 5,500 sf</span>
@@ -121,7 +121,7 @@
       <div id="list"></div>
     </div>
     <div class="footer">
-      <span class="ib">INSULATION BUILDERS</span> · Imagery © Esri · Roof outlines from M2Q reports
+      <span class="ib">INSULATION BUILDERS</span> · Imagery © Esri
     </div>
   </aside>
   <div id="map"></div>
@@ -189,7 +189,7 @@ function popupHtml(b){
     <div class="pop-addr">${b.address}</div>
     <table>
       <tr class="hl"><td class="k">Flat SF (0 pitch)</td><td class="v">${fmt(b.flat_sf)} sf</td></tr>
-      <tr><td class="k">Pitched (Oded)</td><td class="v">${fmt(b.pitched_sqft)} sf</td></tr>
+      <tr><td class="k">Pitched roof</td><td class="v">${fmt(b.pitched_sqft)} sf</td></tr>
       <tr><td class="k">Total eave</td><td class="v">${fmt(b.eave_lf)} lf</td></tr>
       <tr><td class="k">Pitch</td><td class="v">${b.pitch || '—'}</td></tr>
     </table></div>`;
