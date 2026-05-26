@@ -111,8 +111,8 @@
         <button data-filter="large">Large</button>
       </div>
       <div class="controls">
-        <button id="toggle-addr" class="active">Address</button>
-        <button id="toggle-sf" class="active">SF</button>
+        <button id="toggle-addr">Address</button>
+        <button id="toggle-sf">SF</button>
       </div>
       <div class="controls">
         <button id="toggle-streets" class="active">Streets</button>
@@ -179,7 +179,7 @@ const placeLabels = L.tileLayer(
 ).addTo(map);
 
 const featureLayer = L.layerGroup().addTo(map);
-let showAddr = true, showSf = true, currentBase = 'sat', streetsOn = true;
+let showAddr = false, showSf = false, currentBase = 'sat', streetsOn = true;
 let activeFilter = 'all', activeId = null;
 const featureByIdx = new Map();
 
